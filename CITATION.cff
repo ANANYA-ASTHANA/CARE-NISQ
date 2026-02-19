@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+title: "CARE-NISQ: Constraint-Aware Regime Evaluation for NISQ Systems"
+message: "If you use this repository, please cite it using the metadata below."
+type: software
+authors:
+  - family-names: Asthana
+    given-names: Ananya
+date-released: TBC
+version: 1.0.0
+repository-code: https://github.com/ANANYA-ASTHANA/CARE-NISQ
+license: MIT
