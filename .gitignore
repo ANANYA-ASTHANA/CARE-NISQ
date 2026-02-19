@@ -1,0 +1,65 @@
+# ----------------------------
+# Python bytecode / cache
+# ----------------------------
+__pycache__/
+*.py[cod]
+*.so
+
+# ----------------------------
+# Virtual environments
+# ----------------------------
+.env
+.venv
+venv/
+env/
+ENV/
+
+# ----------------------------
+# Conda environments
+# ----------------------------
+.conda/
+conda-meta/
+
+# ----------------------------
+# Jupyter notebooks checkpoints
+# ----------------------------
+.ipynb_checkpoints/
+
+# ----------------------------
+# Build artifacts
+# ----------------------------
+build/
+dist/
+*.egg-info/
+
+# ----------------------------
+# Logs
+# ----------------------------
+*.log
+
+# ----------------------------
+# OS-specific files
+# ----------------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------------
+# IDE files
+# ----------------------------
+.vscode/
+.idea/
+
+# ----------------------------
+# Large experimental outputs
+# ----------------------------
+results/raw_results.csv
+results/processed/
+plots/
+
+# ----------------------------
+# Temporary files
+# ----------------------------
+*.tmp
+*.bak
+*.swp
+
