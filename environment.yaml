@@ -1,0 +1,17 @@
+name: care-nisq
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10,<3.13
+  - numpy>=1.26,<3.0
+  - scipy>=1.10,<2.0
+  - pandas>=2.0,<3.0
+  - matplotlib>=3.7,<4.0
+  - networkx>=3.0,<4.0
+  - pyyaml>=6.0,<7.0
+  - tqdm>=4.66,<5.0
+  - pip>=23.0
+  - pip:
+      - qiskit>=2.3.0,<2.4.0
+      - qiskit-aer>=0.17.2,<0.18.0
+      - qiskit-addon-cutting>=0.10.0,<0.11.0
