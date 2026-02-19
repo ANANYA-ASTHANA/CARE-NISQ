@@ -1,0 +1,15 @@
+# Core QC stack
+qiskit>=2.3.0,<2.4.0
+qiskit-aer>=0.17.2,<0.18.0
+qiskit-addon-cutting>=0.10.0,<0.11.0
+
+# Scientific / plotting stack
+numpy>=1.26.0,<3.0.0
+scipy>=1.10.0,<2.0.0
+pandas>=2.0.0,<3.0.0
+matplotlib>=3.7.0,<4.0.0
+networkx>=3.0,<4.0
+
+# Configs / utilities
+pyyaml>=6.0.0,<7.0.0
+tqdm>=4.66.0,<5.0.0
