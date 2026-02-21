@@ -1,0 +1,2 @@
+noise_model: depolarizing
+num_samples_default: 100   # temporary fallback until calibration.json exists
