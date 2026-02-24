@@ -93,7 +93,7 @@ def run():
     """
 
     base_cfg_path = "configs/base.yaml"
-    main_cfg_path = "configs/experiments_main.yaml"
+    main_cfg_path = "configs/experiments_robustness.yaml"
 
     # --- thresholds (can later be moved to base.yaml) ---
     # Interpretation: we want M1 to be stable across simulator-seed replicates.
