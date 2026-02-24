@@ -4,7 +4,7 @@ depth_multipliers: [1.0, 1.5, 2.0]
 noise_levels: [1e-4, 1e-3, 1e-2]
 fmax_levels: [2, 4]
 techniques: [T1, T2, T3, T4]
-R_total: 1
+R_total: 3
 seeds: [11, 23, 37]
 shots_per_kernel:
   HEA10: 10000
