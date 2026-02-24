@@ -101,7 +101,7 @@ class DepthSpec:
 
 @dataclass(frozen=True)
 class ShotSpec:
-    shots_per_exec: int = 2048  # per executed circuit
+    shots_per_exec: int = 10000  # per executed circuit
 
     def validate(self) -> None:
         if self.shots_per_exec <= 0:
@@ -256,10 +256,9 @@ def build_configs_for_main_grid(
     # Shots per kernel
     shots_by_kernel: Dict[str, int] = _require(main, "shots_per_kernel")
 
-    # Seeds list
-    seeds: List[int] = _require(main, "seeds")
-    seed_transpiler_fixed = int(seeds[0])  # fixed for all runs (main grid consistency)
-  
+    seed: int = int(_require(main, "seed"))
+    seed_transpiler_fixed = seed  # fixed for all runs 
+    seed_sim = seed  # fixed across main runs (main grid consistency)
     num_samples_default = int(base.get("num_samples_default", 0))
   
     configs: List[ExperimentConfig] = []
@@ -272,7 +271,6 @@ def build_configs_for_main_grid(
                     for fmax in fmax_levels:
                         for tech in techniques:
                             for r_idx in range(1, R_total + 1):
-                                seed_sim = int(seeds[r_idx - 1])  # varies across replicates
                                 routing = RoutingSpec(
                                     best_of_k=5 if tech == "T2" else 1
                                 )
@@ -318,6 +316,7 @@ def build_configs_for_main_grid(
                                     routing=routing,
                                     cutting=cutting,
                                     zne=zne,
+                                    shots=ShotSpec(shots_per_exec=int(shots_by_kernel[k])),
                                     rep=ReplicationSpec(
                                        replicate_id=r_idx,
                                        seed_transpiler=seed_transpiler_fixed,
@@ -326,7 +325,7 @@ def build_configs_for_main_grid(
                                     ),
                                     obs_policy="local_Z_ZZ",
                                     obs_cap=20,
-                                    tags=(),
+                                    tags=("main_grid",),
                                 )
                                 cfg.validate()
                                 configs.append(cfg)
@@ -356,17 +355,14 @@ def build_stress_set_for_calibration(
 
     shots_by_kernel: Dict[str, int] = _require(main, "shots_per_kernel")
     seeds: List[int] = _require(main, "seeds")
-
-    # Calibration replicate count
-    R_cal = min(3, len(seeds))
-    calib_seeds = seeds[:R_cal]
-
+    R_total: int = int(_require(main, "R_total"))
+    
     out: List[ExperimentConfig] = []
   
     for (k, topo, alpha, p, fmax) in stress:
         n = 12 if k == "QFT12" else 10
 
-        for ridx, s in enumerate(calib_seeds, start=1):
+        for ridx, s in enumerate(seeds, start=1):
             cfg = ExperimentConfig(
                 kernel=k,  # type: ignore
                 topology=topo,  # type: ignore
@@ -388,9 +384,9 @@ def build_stress_set_for_calibration(
 
                 rep=ReplicationSpec(
                     replicate_id=ridx,
-                    seed_transpiler=int(calib_seeds[0]),  # keep transpiler seed fixed for calibration
+                    seed_transpiler=int(seeds[0]),  # keep transpiler seed fixed for calibration
                     seed_simulator=int(s),
-                    R_total=R_cal,
+                    R_total=R_total,
                 ),
 
                 obs_policy="local_Z_ZZ",
@@ -403,3 +399,4 @@ def build_stress_set_for_calibration(
             out.append(cfg)
 
     return out
+
