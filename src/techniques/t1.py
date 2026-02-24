@@ -9,6 +9,7 @@ from src.transpile.routing import compile_k1
 from src.observables.policy import build_observables
 from src.exec.aer_expectations import estimate_expectations
 from src.metrics.m1 import m1_mae
+from src.metrics.m2 import m2_for_technique
 
 
 def run(cfg: ExperimentConfig) -> Dict[str, Any]:
@@ -26,4 +27,6 @@ def run(cfg: ExperimentConfig) -> Dict[str, Any]:
 
     m1 = float(m1_mae(ideal, noisy))
 
-    return m1
+    m2 = m2_for_technique(technique=cfg.technique, compiled_circuit=compiled)
+
+    return m1, m2
