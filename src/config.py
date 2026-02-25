@@ -84,8 +84,8 @@ class NoiseSpec:
     level: float = 1e-3  # noise parameter p
 
     def validate(self) -> None:
-        if self.level <= 0:
-            raise ValueError("NoiseSpec.level must be > 0")
+        if self.level < 0:
+            raise ValueError("NoiseSpec.level must be >= 0")
         if self.model.strip() == "":
             raise ValueError("NoiseSpec.model cannot be empty")
 
@@ -399,4 +399,5 @@ def build_stress_set_for_calibration(
             out.append(cfg)
 
     return out
+
 
