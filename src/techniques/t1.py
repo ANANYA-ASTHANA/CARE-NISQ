@@ -25,8 +25,12 @@ def run(cfg: ExperimentConfig) -> Dict[str, Any]:
     ideal = estimate_expectations(cfg, compiled, observables, noisy=False)
     noisy = estimate_expectations(cfg, compiled, observables, noisy=True)
 
-    m1 = float(m1_mae(ideal, noisy))
+    m1 = m1_mae(ideal, noisy)
 
     m2 = m2_for_technique(technique=cfg.technique, compiled_circuit=compiled)
 
-    return m1, m2
+    return {
+        "M1": float(M1),
+        "M2": M2,
+        "best_of_k": k,
+    }
