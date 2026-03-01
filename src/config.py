@@ -11,7 +11,7 @@ import yaml
 TechniqueName = Literal["T1", "T2", "T3", "T4"]
 KernelName = Literal["QFT12", "HEA10", "Grover10"]
 TopologyName = Literal["line", "grid", "sparse"]
-CutScheme = Literal["none", "heuristic", "optimized"]
+CutScheme = Literal["none", "deterministic", "automated"]
 ZNEModel = Literal["none", "linear", "richardson"]
 
 
@@ -39,18 +39,18 @@ class RoutingSpec:
 class CuttingSpec:
     enabled: bool = False
     scheme: CutScheme = "none"
-    fmax: int = 0                      # max cuts (level axis)
-    qmin: int = 3                      # min qubits per fragment (global lock)
-    num_samples: int = 0               # T_global after calibration
+    fmax: int = 0                                                # max cuts (level axis)
+    fragment_width_rule: str = "ceil_0.75n"                      # max qubits per fragment 
+    num_samples: int = 0                                         # T_global after calibration
 
     def validate(self) -> None:
         if self.enabled:
-            if self.scheme not in ("heuristic", "optimized"):
-                raise ValueError("CuttingSpec.scheme must be 'heuristic' or 'optimized' when enabled")
+            if self.scheme not in ("deterministic", "automated"):
+                raise ValueError("CuttingSpec.scheme must be 'deterministic' or 'automated' when enabled")
             if self.fmax not in (2, 4):
                 raise ValueError("CuttingSpec.fmax must be one of {2,4} (locked)")
-            if self.qmin != 3:
-                raise ValueError("CuttingSpec.qmin is locked to 3")
+            if self.fragment_width_rule not in ("ceil_0.75n", "ceil_0.67n", "n_minus_2"):
+                raise ValueError("CuttingSpec.fragment_width_rule must be one of {"ceil_0.75n", "ceil_0.67n", "n_minus_2"}")
             if self.num_samples <= 0:
                 raise ValueError("CuttingSpec.num_samples must be > 0 when cutting is enabled")
         else:
@@ -294,9 +294,9 @@ def build_configs_for_main_grid(
 
                                 cutting = CuttingSpec(
                                     enabled=cutting_enabled,
-                                    scheme="optimized" if cutting_enabled else "none",
+                                    scheme="deterministic" if cutting_enabled else "none",
                                     fmax=fmax if cutting_enabled else 0,
-                                    qmin=3,
+                                    fragment_width_rule: str = "ceil_0.75n",
                                     num_samples=ns,
                                 )
 
@@ -377,7 +377,7 @@ def build_stress_set_for_calibration(
                 routing=RoutingSpec(best_of_k=1),
 
                 # num_samples is a placeholder here; calibration runner overwrites it per candidate T
-                cutting=CuttingSpec(enabled=True, scheme="optimized", fmax=fmax, qmin=3, num_samples=1),
+                cutting=CuttingSpec(enabled=True, scheme="deterministic", fmax=fmax, fragment_width_rule: str = "ceil_0.75n", num_samples=1),
 
                 zne=ZNESpec(enabled=False, model="none"),
                 shots=ShotSpec(shots_per_exec=int(shots_by_kernel[k])),
@@ -399,5 +399,6 @@ def build_stress_set_for_calibration(
             out.append(cfg)
 
     return out
+
 
 
