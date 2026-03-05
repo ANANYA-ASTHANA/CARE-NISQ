@@ -39,4 +39,8 @@ def run(cfg: ExperimentConfig) -> Dict[str, Any]:
         "M1": float(M1),
         "M2": M2,
         "best_of_k": k,
+<<<<<<< HEAD
     }
+=======
+    }
+>>>>>>> 9d8c8cdf15a8380c444c70132f5f0370c4ba6a9c

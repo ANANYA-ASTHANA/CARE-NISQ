@@ -11,7 +11,7 @@ import yaml
 TechniqueName = Literal["T1", "T2", "T3", "T4"]
 KernelName = Literal["QFT12", "HEA10", "Grover10"]
 TopologyName = Literal["line", "grid", "sparse"]
-CutScheme = Literal["none", "heuristic", "optimized"]
+CutScheme = Literal["none", "deterministic", "automated"]
 ZNEModel = Literal["none", "linear", "richardson"]
 
 
@@ -39,18 +39,16 @@ class RoutingSpec:
 class CuttingSpec:
     enabled: bool = False
     scheme: CutScheme = "none"
-    fmax: int = 0                      # max cuts (level axis)
-    qmin: int = 3                      # min qubits per fragment (global lock)
-    num_samples: int = 0               # T_global after calibration
+    fmax: int = 0                                                # max cuts (level axis)
+    fragment_width_rule: str = "ceil_0.75n"                      # max qubits per fragment 
+    num_samples: int = 0                                         # T_global after calibration
 
     def validate(self) -> None:
         if self.enabled:
-            if self.scheme not in ("heuristic", "optimized"):
-                raise ValueError("CuttingSpec.scheme must be 'heuristic' or 'optimized' when enabled")
+            if self.scheme not in ("deterministic", "automated"):
+                raise ValueError("CuttingSpec.scheme must be 'deterministic' or 'automated' when enabled")
             if self.fmax not in (2, 4):
                 raise ValueError("CuttingSpec.fmax must be one of {2,4} (locked)")
-            if self.qmin != 3:
-                raise ValueError("CuttingSpec.qmin is locked to 3")
             if self.num_samples <= 0:
                 raise ValueError("CuttingSpec.num_samples must be > 0 when cutting is enabled")
         else:
@@ -84,8 +82,8 @@ class NoiseSpec:
     level: float = 1e-3  # noise parameter p
 
     def validate(self) -> None:
-        if self.level <= 0:
-            raise ValueError("NoiseSpec.level must be > 0")
+        if self.level < 0:
+            raise ValueError("NoiseSpec.level must be >= 0")
         if self.model.strip() == "":
             raise ValueError("NoiseSpec.model cannot be empty")
 
@@ -268,12 +266,11 @@ def build_configs_for_main_grid(
         for topo in topologies:
             for alpha in depth_multipliers:
                 for p in noise_levels:
-                    for fmax in fmax_levels:
-                        for tech in techniques:
+                    for tech in techniques:
+                        fmax_iter = fmax_levels if tech in ("T3", "T4") else [0]
+                        for fmax in fmax_iter:
                             for r_idx in range(1, R_total + 1):
-                                routing = RoutingSpec(
-                                    best_of_k=5 if tech == "T2" else 1
-                                )
+                                routing = RoutingSpec(best_of_k=5 if tech == "T2" else 1)
 
                                 cutting_enabled = tech in ("T3", "T4")
                                 zne_enabled = tech == "T4"
@@ -294,9 +291,8 @@ def build_configs_for_main_grid(
 
                                 cutting = CuttingSpec(
                                     enabled=cutting_enabled,
-                                    scheme="optimized" if cutting_enabled else "none",
+                                    scheme="deterministic" if cutting_enabled else "none",
                                     fmax=fmax if cutting_enabled else 0,
-                                    qmin=3,
                                     num_samples=ns,
                                 )
 
@@ -318,10 +314,10 @@ def build_configs_for_main_grid(
                                     zne=zne,
                                     shots=ShotSpec(shots_per_exec=int(shots_by_kernel[k])),
                                     rep=ReplicationSpec(
-                                       replicate_id=r_idx,
-                                       seed_transpiler=seed_transpiler_fixed,
-                                       seed_simulator=seed_sim,
-                                       R_total=R_total,
+                                        replicate_id=r_idx,
+                                        seed_transpiler=seed_transpiler_fixed,
+                                        seed_simulator=seed_sim,
+                                        R_total=R_total,
                                     ),
                                     obs_policy="local_Z_ZZ",
                                     obs_cap=20,
@@ -332,7 +328,7 @@ def build_configs_for_main_grid(
 
     return configs
 
-
+                              
 def build_stress_set_for_calibration(
     base_cfg_path: str,
     main_cfg_path: str,
@@ -377,7 +373,7 @@ def build_stress_set_for_calibration(
                 routing=RoutingSpec(best_of_k=1),
 
                 # num_samples is a placeholder here; calibration runner overwrites it per candidate T
-                cutting=CuttingSpec(enabled=True, scheme="optimized", fmax=fmax, qmin=3, num_samples=1),
+                cutting=CuttingSpec(enabled=True, scheme="deterministic", fmax=fmax, num_samples=1),
 
                 zne=ZNESpec(enabled=False, model="none"),
                 shots=ShotSpec(shots_per_exec=int(shots_by_kernel[k])),
@@ -399,4 +395,7 @@ def build_stress_set_for_calibration(
             out.append(cfg)
 
     return out
+
+
+
 
