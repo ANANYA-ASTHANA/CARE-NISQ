@@ -49,8 +49,6 @@ class CuttingSpec:
                 raise ValueError("CuttingSpec.scheme must be 'deterministic' or 'automated' when enabled")
             if self.fmax not in (2, 4):
                 raise ValueError("CuttingSpec.fmax must be one of {2,4} (locked)")
-            if self.fragment_width_rule not in ("ceil_0.75n", "ceil_0.67n", "n_minus_2"):
-                raise ValueError("CuttingSpec.fragment_width_rule must be one of {"ceil_0.75n", "ceil_0.67n", "n_minus_2"}")
             if self.num_samples <= 0:
                 raise ValueError("CuttingSpec.num_samples must be > 0 when cutting is enabled")
         else:
@@ -268,12 +266,11 @@ def build_configs_for_main_grid(
         for topo in topologies:
             for alpha in depth_multipliers:
                 for p in noise_levels:
-                    for fmax in fmax_levels:
-                        for tech in techniques:
+                    for tech in techniques:
+                        fmax_iter = fmax_levels if tech in ("T3", "T4") else [0]
+                        for fmax in fmax_iter:
                             for r_idx in range(1, R_total + 1):
-                                routing = RoutingSpec(
-                                    best_of_k=5 if tech == "T2" else 1
-                                )
+                                routing = RoutingSpec(best_of_k=5 if tech == "T2" else 1)
 
                                 cutting_enabled = tech in ("T3", "T4")
                                 zne_enabled = tech == "T4"
@@ -296,7 +293,6 @@ def build_configs_for_main_grid(
                                     enabled=cutting_enabled,
                                     scheme="deterministic" if cutting_enabled else "none",
                                     fmax=fmax if cutting_enabled else 0,
-                                    fragment_width_rule: str = "ceil_0.75n",
                                     num_samples=ns,
                                 )
 
@@ -318,10 +314,10 @@ def build_configs_for_main_grid(
                                     zne=zne,
                                     shots=ShotSpec(shots_per_exec=int(shots_by_kernel[k])),
                                     rep=ReplicationSpec(
-                                       replicate_id=r_idx,
-                                       seed_transpiler=seed_transpiler_fixed,
-                                       seed_simulator=seed_sim,
-                                       R_total=R_total,
+                                        replicate_id=r_idx,
+                                        seed_transpiler=seed_transpiler_fixed,
+                                        seed_simulator=seed_sim,
+                                        R_total=R_total,
                                     ),
                                     obs_policy="local_Z_ZZ",
                                     obs_cap=20,
@@ -332,7 +328,7 @@ def build_configs_for_main_grid(
 
     return configs
 
-
+                              
 def build_stress_set_for_calibration(
     base_cfg_path: str,
     main_cfg_path: str,
@@ -377,7 +373,7 @@ def build_stress_set_for_calibration(
                 routing=RoutingSpec(best_of_k=1),
 
                 # num_samples is a placeholder here; calibration runner overwrites it per candidate T
-                cutting=CuttingSpec(enabled=True, scheme="deterministic", fmax=fmax, fragment_width_rule: str = "ceil_0.75n", num_samples=1),
+                cutting=CuttingSpec(enabled=True, scheme="deterministic", fmax=fmax, num_samples=1),
 
                 zne=ZNESpec(enabled=False, model="none"),
                 shots=ShotSpec(shots_per_exec=int(shots_by_kernel[k])),
@@ -399,6 +395,7 @@ def build_stress_set_for_calibration(
             out.append(cfg)
 
     return out
+
 
 
 
