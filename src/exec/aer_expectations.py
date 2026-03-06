@@ -20,8 +20,8 @@ def estimate_expectations(
 
     est = AerEstimator(
         options={
-            "default_shots": int(cfg.shots.shots_per_exec),
-            "seed_simulator": int(cfg.rep.seed_simulator),
+            "run_options": {"shots": int(cfg.shots.shots_per_exec)},
+            "backend_options": {"seed_simulator": int(cfg.rep.seed_simulator)},
             **({"noise_model": noise_model} if noise_model is not None else {}),
         }
     )
