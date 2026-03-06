@@ -133,20 +133,20 @@ def run(cfg: ExperimentConfig) -> Dict[str, Any]:
     logical = build_kernel(cfg.kernel)
     cmap = coupling_map_for(cfg.topology, cfg.n_qubits, seed=7)
     compiled = compile_k1(logical, coupling_map=cmap, cfg=cfg)
-
+    print("[DEBUG] Step 1 complete!")
     # 2) Observables
     obs_ops = build_observables(cfg.obs_policy, cfg.n_qubits, cfg.obs_cap)
     obs_paulis = _to_paulilist(obs_ops)
-
+    print("[DEBUG] Step 2 complete!")
     # 3) Ideal reference (no noise) on compiled circuit
     ideal = estimate_expectations(cfg, compiled, obs_ops, noisy=False)
-
+    print("[DEBUG] Step 3 complete!")
     # 4) Apply cutting transform based on scheme
     if cfg.cutting.scheme == "deterministic":
         cut_circuit, cut_meta = _cut_circuit_deterministic(compiled, cfg)
     else:
         cut_circuit, cut_meta = _cut_circuit_automated(compiled, cfg)
-
+    print("[DEBUG] Step 4 complete!")
     # 5) Generate subexperiments + coefficients (depends on T=num_samples)
     subexperiments, coefficients = generate_cutting_experiments(
         circuits=cut_circuit,
@@ -154,7 +154,7 @@ def run(cfg: ExperimentConfig) -> Dict[str, Any]:
         num_samples=int(cfg.cutting.num_samples),
     )
     subcircuits: List[QuantumCircuit] = list(subexperiments)
-
+    print("[DEBUG] Step 5 complete!")
     # 6) Execute subexperiments under noise with Aer Estimator
     noise_model = build_noise_model(cfg)
     est = AerEstimator(
@@ -171,7 +171,7 @@ def run(cfg: ExperimentConfig) -> Dict[str, Any]:
         observables=[obs_paulis] * len(subcircuits),
     ).result()
     exec_time = time.time() - t0
-
+    print("[DEBUG] Step 6 complete!")
     # 7) Reconstruct expectation values
     approx = reconstruct_expectation_values(
         results=prim_res,
@@ -179,7 +179,7 @@ def run(cfg: ExperimentConfig) -> Dict[str, Any]:
         observables=obs_paulis,
     )
     approx_vec = [float(x) for x in approx]
-
+    print("[DEBUG] Step 7 complete!")
     # 8) Metrics
     M1 = m1_mae(ideal, approx_vec)
     M2 = m2_for_technique(technique="T3", fragments=subcircuits)
@@ -191,7 +191,7 @@ def run(cfg: ExperimentConfig) -> Dict[str, Any]:
         coeff_len=len(coefficients),
         time_exec_seconds=float(exec_time),
     ).as_dict()
-
+    print("[DEBUG] Step 8 complete!")
     return {
         "M1": float(M1),
         "M2": M2,
