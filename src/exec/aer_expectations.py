@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from qiskit_aer.primitives import Estimator as AerEstimator
+from qiskit_aer.primitives import EstimatorV2 as AerEstimator
 from qiskit.quantum_info import SparsePauliOp
 
 from src.config import ExperimentConfig
