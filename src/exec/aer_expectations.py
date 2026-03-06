@@ -26,7 +26,8 @@ def estimate_expectations(
         }
     )
 
-    job = est.run([circuit] * len(observables), observables)
+    pubs = [(circuit, obs) for obs in observables]
+    job = est.run(pubs)
     res = job.result()
-    # Aer Estimator returns .values aligned to observables
-    return [float(v) for v in res.values]
+    
+    return [float(pub_result.data.evs) for pub_result in res]
